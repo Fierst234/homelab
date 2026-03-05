@@ -19,5 +19,5 @@ EOF
 
 sudo apt update
 
-VERSION_STRING=5:29.1.2-1~ubuntu.24.04~noble
+VERSION_STRING=$(apt-cache policy docker-ce | grep 'Candidate:' | awk '{print $2}')
 sudo apt install -y docker-ce=$VERSION_STRING docker-ce-cli=$VERSION_STRING containerd.io docker-buildx-plugin docker-compose-plugin
