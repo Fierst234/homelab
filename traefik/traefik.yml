@@ -1,0 +1,13 @@
+certificatesResolvers:
+  cloudflare:
+    acme:
+      email: your-email@example.com
+      storage: ./letsencrypt/acme.json
+      dnsChallenge:
+        provider: cloudflare
+        resolvers:
+          - "1.1.1.1:53"
+          - "8.8.8.8:53"
+
+environment:
+  - CF_DNS_API_TOKEN=your-cloudflare-api-token
