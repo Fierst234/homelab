@@ -1,13 +1,13 @@
-service:
+services:
   traefik:
     image: traefik:3.7
     container_name: traefik
     restart: unless-stopped
     security_opt:
-      - no-new-privileges: true
+      - "no-new-privileges:true"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./letsencrypt:/letsencrypt:ro
+      - ./letsencrypt:/letsencrypt
       - ./dynamic:/dynamic:ro
     environment:
       - TZ=Europe/Moscow
@@ -16,13 +16,7 @@ service:
     command:
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
-      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
-      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
       - "--entrypoints.websecure.http.tls=true"
-      
-      # Attach the static configuration tls.yaml file that contains the tls configuration settings
-      - "--providers.file.filename=/dynamic/tls.yaml"
 
       # Providers 
       - "--providers.docker=true"
@@ -32,39 +26,37 @@ service:
       # Certificate Resolver (Cloudflare)
       - "--certificatesresolvers.cloudflare.acme.dnschallenge=true"
       - "--certificatesresolvers.cloudflare.acme.dnschallenge.provider=cloudflare"
-      - "--certificatesresolvers.cloudflare.acme.email=your-email@example.com"
+      - "--certificatesresolvers.cloudflare.acme.email=your_email"
       - "--certificatesresolvers.cloudflare.acme.storage=/letsencrypt/acme.json"
       - "--certificatesresolvers.cloudflare.acme.dnschallenge.resolvers=1.1.1.1:53,8.8.8.8:53"
-      
-      # Environment variables for Cloudflare
-      - "--certificatesresolvers.cloudflare.acme.dnschallenge.disablechecks=true"
 
       # API & Dashboard 
       - "--api.dashboard=true"
       - "--api.insecure=false"
 
+      - "--certificatesresolvers.cloudflare.acme.dnschallenge.delaybeforecheck=10"
+      
       # Observability 
-      - "--log.level=INFO"
+      - "--log.level=DEBUG"
       - "--accesslog=true"
       - "--metrics.prometheus=true"
     labels:
       - "traefik.enable=true"
 
-      - "traefik.http.routers.dashboard.rule=Host(`dashboard.docker.localhost`)"
+      - "traefik.http.routers.dashboard.rule=Host(`domain`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`)"
       - "traefik.http.routers.dashboard.entrypoints=websecure"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.tls=true"
+      - "traefik.http.routers.dashboard.tls.certresolver=cloudflare"
 
       # Basic‑auth middleware
-      - "traefik.http.middlewares.dashboard-auth.basicauth.users=<PASTE_HASH_HERE>"
-      - "traefik.http.routers.dashboard.middlewares=dashboard-auth@docker"
+      - "traefik.http.routers.dashboard.middlewares=dashboard-auth"
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=hash_here"
 
-      # Need to change to actual domain
-      - traefik.http.routers.my-container.rule=Host(`example.com`)
     ports:
       - 443:443
       - 80:80
-    network:
+    networks:
       - proxy
 
   whoami:
@@ -75,7 +67,7 @@ service:
       - proxy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.whoami.rule=Host(`whoami.docker.localhost`)"
+      - "traefik.http.routers.whoami.rule=Host(`domain`)"
       - "traefik.http.routers.whoami.entrypoints=websecure"
       - "traefik.http.routers.whoami.tls=true"
 
