@@ -1,4 +1,3 @@
-# Выбор оболочки bash, # обязательна
 #!/bin/bash
 
 # Add Docker's official GPG key:
