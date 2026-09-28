@@ -2,7 +2,7 @@
 
 # Add Docker's official GPG key:
 sudo apt update
-sudo apt install ca-certificates curl
+sudo apt install ca-certificates curl -y
 sudo install -m 0755 -d /etc/apt/keyrings
 sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
 sudo chmod a+r /etc/apt/keyrings/docker.asc
@@ -21,5 +21,10 @@ sudo apt update
 VERSION_STRING=$(apt-cache policy docker-ce | grep 'Candidate:' | awk '{print $2}')
 sudo apt install -y docker-ce=$VERSION_STRING docker-ce-cli=$VERSION_STRING containerd.io docker-buildx-plugin docker-compose-plugin
 
-sudo groupadd docker && sudo usermod -aG docker $USER
-newgrp docker
+TARGET_USER="${SUDO_USER:-$(id -un)}"
+sudo groupadd -f docker
+sudo usermod -aG docker "$TARGET_USER"
+
+echo "Готово."
+echo "Чтобы применить членство в группе docker, перезайдите в систему"
+echo "или выполните в текущем терминале: newgrp docker"
